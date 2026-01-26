@@ -680,7 +680,7 @@ $_autoConfigureLaneTypes()
     !$configuration_enable_auto_spacing = 1
 !endprocedure
 
-!unquoted procedure $configureWireframeLane($laneAlias, $headingName = "", $headingAlias = "")
+!unquoted procedure $configureWireframeLane($laneAlias, $headingName = "", $headingAlias = "", $figure = $wireframe_heading_default_figure)
     !if $headingName == ""
         !$headingName = $laneAlias
     !endif
@@ -690,7 +690,7 @@ $_autoConfigureLaneTypes()
     !endif
     !$headingAlias = $_createOrVerifyAlias($headingName, $headingAlias)
     !$laneIndex = $_lookupLaneIndex("wireframe", $laneAlias)
-    $_configureLane("wireframe", $laneIndex, $laneAlias, $headingName, $wireframe_heading_default_figure, "", $headingAlias)
+    $_configureLane("wireframe", $laneIndex, $laneAlias, $headingName, $figure, "", $headingAlias)
 !endprocedure
 
 !unquoted procedure $configureEventLane($laneAlias, $headingName = "", $headingAlias = "", $context = "")
