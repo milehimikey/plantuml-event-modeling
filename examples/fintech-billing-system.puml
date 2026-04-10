@@ -1,0 +1,115 @@
+@startuml
+!include_once ../event-modeling-lib.iuml
+
+$enableAutoAlias()
+$enableAutoSpacing()
+
+' Configure lanes for actors and aggregates
+$configureWireframeLane(Customer)
+$configureWireframeLane(BillingAdmin)
+$configureWireframeLane(FinanceTeam)
+$configureEventLane(Subscription, $context = "Billing")
+$configureEventLane(LineItem, $context = "Billing")
+$configureEventLane(Invoice, $context = "Billing")
+$configureEventLane(Payment, $context = "Billing")
+$configureEventLane(Reconciliation, $context = "Billing")
+
+' ===== Subscription Management =====
+$wireframe(Subscription Portal, Customer)
+$command(Subscribe to Plan)
+$event(Subscription Activated, Subscription)
+$view(Active Subscriptions)
+$arrow(Active Subscriptions, Subscription Portal)
+
+$wireframe(Subscription Portal, Customer)
+$command(Change Subscription)
+$event(Subscription Changed, Subscription)
+$view(Active Subscriptions)
+$wireframe(Subscription Portal, Customer)
+
+' ===== Line Items from External System =====
+$externalsystem(Order System, LineItem)
+$eventarrow(Order System, Chargeable Item Received)
+$event(Chargeable Item Received, LineItem)
+$view(Pending Charges)
+$wireframe(Billing Admin Portal, BillingAdmin)
+
+' ===== Manual Charges =====
+$wireframe(Billing Admin Portal, BillingAdmin)
+$command(Add Manual Charge)
+$event(Manual Charge Added, LineItem)
+$view(Pending Charges)
+$wireframe(Billing Admin Portal, BillingAdmin)
+
+' ===== Invoice Generation =====
+$wireframe(Finance Portal, FinanceTeam)
+$command(Generate Invoice)
+$event(Invoice Generated, Invoice)
+$view(Invoices to Review)
+$wireframe(Finance Portal, FinanceTeam)
+
+' ===== Invoice Approval =====
+$wireframe(Finance Portal, FinanceTeam)
+$command(Approve Invoice)
+$event(Invoice Approved, Invoice)
+$view(Approved Invoices)
+$wireframe(Finance Portal, FinanceTeam)
+
+' ===== Invoice Delivery =====
+$wireframe(Finance Portal, FinanceTeam)
+$command(Deliver Invoice)
+$event(Invoice Delivered, Invoice)
+$view(Delivered Invoices)
+$wireframe(Customer Portal, Customer)
+$arrow(Delivered Invoices, Customer Portal)
+
+' ===== Payment Processing =====
+$wireframe(Customer Portal, Customer)
+$command(Submit Payment)
+$event(Payment Submitted, Payment)
+$view(Payments Pending Verification)
+$wireframe(Finance Portal, FinanceTeam)
+
+' ===== Payment Confirmation =====
+$wireframe(Finance Portal, FinanceTeam)
+$command(Confirm Payment)
+$event(Payment Confirmed, Payment)
+$view(Confirmed Payments)
+$wireframe(Finance Portal, FinanceTeam)
+
+$wireframe(Finance Portal, FinanceTeam)
+$command(Reject Payment)
+$event(Payment Rejected, Payment)
+$view(Rejected Payments)
+$wireframe(Customer Portal, Customer)
+$arrow(Rejected Payments, Customer Portal)
+
+' ===== Apply Payment to Invoice =====
+$wireframe(Finance Portal, FinanceTeam)
+$command(Apply Payment to Invoice)
+$event(Invoice Paid, Invoice)
+$view(Paid Invoices)
+$wireframe(Finance Portal, FinanceTeam)
+
+' ===== Reconciliation =====
+$wireframe(Finance Portal, FinanceTeam)
+$command(Start Reconciliation)
+$event(Reconciliation Started, Reconciliation)
+$view(Active Reconciliations)
+$wireframe(Finance Portal, FinanceTeam)
+
+$wireframe(Finance Portal, FinanceTeam)
+$command(Complete Reconciliation)
+$event(Reconciliation Completed, Reconciliation)
+$view(Reconciliation Reports)
+$wireframe(Finance Portal, FinanceTeam)
+
+' ===== Subscription Cancellation =====
+$wireframe(Customer Portal, Customer)
+$command(Cancel Subscription)
+$event(Subscription Cancelled, Subscription)
+$view(Cancelled Subscriptions)
+$wireframe(Customer Portal, Customer)
+
+$renderEventModelingDiagram()
+@enduml

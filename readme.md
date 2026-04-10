@@ -5,6 +5,28 @@ This library is built for fast creation of [Event Modeling](https://eventmodelin
 
 Note: only the default GraphViz layout engine of PlantUML is supported.
 
+## 🚀 Quick Start
+
+**New to this library?** → [Getting Started Guide](GETTING_STARTED.md)
+**New to event modeling?** → [Event Modeling Process Guide](examples/event-modeling-phases-guide.md)
+**Just want a quick ref?** → [Quick Reference Card](EVENT_MODELING_PROCESS_QUICK_REF.md)
+
+## 🎯 New to Event Modeling?
+
+**Start here:** [Complete Event Modeling Process Guide](examples/event-modeling-phases-guide.md)
+**Quick Reference:** [Event Modeling Process Quick Ref](EVENT_MODELING_PROCESS_QUICK_REF.md)
+
+This guide shows you:
+- The **7 steps of event modeling** from brainstorming to slicing
+- **When to use policies and fields** (hint: not at the beginning!)
+- **Progressive examples** showing the same system at different phases
+- **Best practices** for workshop facilitation
+
+### Key Principle
+**Start simple, add complexity progressively.** Don't add policies or fields until you've completed the base model and understand the business process.
+
+**Common Mistake:** Adding `$policy()` and `$fields` in your first diagram. These are for **Step 7 (slicing)** only!
+
 ## Quick example
 ![Example diagram](examples/Example1.png)
 ```plantuml
@@ -40,11 +62,34 @@ $renderEventModelingDiagram()
 
 ## More examples
 
+### The Complete Process: Base Model → Slicing
+
+See how the same billing system evolves through event modeling phases:
+
+**Phase 1:** [Base Model](examples/subscription-billing-base.puml) - Understand the business process
+![Base Model](examples/subscription-billing-base.png)
+
+**Phase 2:** [Add Policies](examples/subscription-billing-with-policies.puml) - Identify automation
+![With Policies](examples/subscription-billing-with-policies.png)
+
+**Phase 3:** [Add Business Rules](examples/subscription-billing-with-rules.puml) - Define logic
+![With Rules](examples/subscription-billing-with-rules.png)
+
+**Phase 4:** [Add Data Structures](examples/subscription-billing-sliced.puml) - Complete specification
+![Fully Sliced](examples/subscription-billing-sliced.png)
+
+📘 **[Read the complete guide](examples/event-modeling-phases-guide.md)** to understand when and why to use each element.
+
+### Classic Examples
+
 ![Iterative example](examples/Example3e.png)
 [Iterative example during an event Modeling session](examples/iterative-example.md)
 
 ![Extensive diagram](examples/Example4.png)
 [Extensive example](examples/extensive-example.md)
+
+![Fintech billing system](examples/fintech-billing-system.png)
+[Fintech billing system base model](examples/fintech-billing-system.puml) - Comprehensive example with external system integration
 
 ## Background
 This library was developed for live creation of Event Modeling diagrams during Event Modeling sessions. The layout and styling options are limited, mainly due to how PlantUML works. If you want to fully style and position the elements yourself, this library is not for you.
@@ -75,7 +120,7 @@ Adding elements:
 - **\$command($name, $offset = 0, $arrow = 1, $alias = "", $figure = $default_figure, $fields = "")**
 - **\$view($name, $offset = 0, $arrow = 1, $alias = "", $figure = $default_figure, $fields = "")**
 - **\$event($name, $laneAlias = "defaultLane", $offset = 0, $arrow = 1, $alias = "", $figure = $default_figure, $fields = "")**
-- **\$policy($name, $offset = 0, $arrow = 1, $alias = "", $figure = $default_figure, $fields = "")** - Automation policies that react to events
+- **\$policy($name, $offset = 0, $arrow = 1, $alias = "", $figure = $default_figure, $fields = "")** - ⚠️ **Automation policies - add during slicing phase (Step 7), not in base model**
 - **\$extra($name, $offset = 0, $arrow = 1, $alias = "", $figure = $default_figure, $fields = "")** - These elements are placed at the top lane and can be used for e.g. translation, automation, and sagas.
 
 Adding arrows:
@@ -109,7 +154,16 @@ $renderEventModelingDiagram()
 
 ### Adding Fields to Elements
 
+⚠️ **Important:** Fields should be added during the **slicing phase (Step 7)**, not in the initial base model.
+
 You can add field definitions to commands, events, views, policies, and wireframes using the `$fields` parameter. Fields are displayed below the element name with an automatic separator line:
+
+**When to add fields:**
+- **Commands** - Input parameters (during slicing)
+- **Events** - Domain data structures (during slicing)
+- **Views** - Display fields (during slicing)
+- **Policies** - Business rules and invariants (during slicing)
+- **Wireframes** - UI elements (optional, for detailed mockups)
 
 ```plantuml
 @startuml
@@ -131,6 +185,8 @@ $renderEventModelingDiagram()
 ![Fields example](examples/simple-fields-demo.png)
 
 See [examples/fields-example.puml](examples/fields-example.puml) for a comprehensive demonstration of fields across all element types.
+
+📘 **[Learn when to add fields](examples/event-modeling-phases-guide.md)** in the complete process guide.
 
 ## Customization
 All styles, variables, and procedures defined in the library can be overridden by redefining them after the include:

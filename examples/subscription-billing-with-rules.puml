@@ -1,0 +1,67 @@
+@startuml
+!include_once ../event-modeling-lib.iuml
+
+$enableAutoAlias()
+$enableAutoSpacing()
+
+' PHASE 3: ADD BUSINESS RULES TO POLICIES (Step 7b)
+' Purpose: Define business logic and invariants
+' Audience: Development team + domain experts
+' What changed: Added field definitions to policies showing business rules
+
+$configureWireframeLane(Customer)
+$configureWireframeLane(Finance)
+$configureEventLane(Subscription, $context = "Billing")
+$configureEventLane(Invoice, $context = "Billing")
+$configureEventLane(Payment, $context = "Billing")
+
+' Subscription workflow
+$wireframe(Subscription Portal, Customer)
+$command(Subscribe to Plan)
+$event(Subscription Activated, Subscription)
+$view(Active Subscriptions)
+$arrow(Active Subscriptions, Subscription Portal)
+
+' Invoice generation with business rules
+$policy(Billing Cycle Policy, $offset = 1, $fields = "Check billing cycle date arrived\nGather pending charges for customer\nCalculate proration if mid-cycle\nAggregate subscription fees\nValidate minimum charge amount\nGenerate unique invoice number")
+$eventarrow(Subscription Activated, Billing Cycle Policy)
+$command(Generate Invoice)
+$commandarrow(Billing Cycle Policy, Generate Invoice)
+$event(Invoice Generated, Invoice)
+$view(Pending Invoices)
+
+' Invoice delivery with business rules
+$policy(Invoice Delivery Policy, $fields = "Format invoice as PDF\nDetermine delivery method (email/portal)\nSend via email service\nLog delivery attempt\nRetry on failure (max 3 times)")
+$eventarrow(Invoice Generated, Invoice Delivery Policy)
+$command(Send Invoice)
+$commandarrow(Invoice Delivery Policy, Send Invoice)
+$event(Invoice Sent, Invoice)
+$view(Sent Invoices)
+$wireframe(Customer Portal, Customer)
+$arrow(Sent Invoices, Customer Portal)
+
+' Payment workflow
+$wireframe(Customer Portal, Customer)
+$command(Submit Payment)
+$event(Payment Submitted, Payment)
+$view(Pending Payments)
+
+' Payment verification with business rules
+$policy(Payment Verification Policy, $offset = 1, $fields = "Call payment gateway API\nValidate payment method\nCheck funds availability\nProcess transaction\nHandle 3D Secure authentication\nRetry on timeout (max 3)\nRecord gateway transaction ID")
+$eventarrow(Payment Submitted, Payment Verification Policy)
+$command(Verify Payment)
+$commandarrow(Payment Verification Policy, Verify Payment)
+$event(Payment Confirmed, Payment)
+$view(Confirmed Payments)
+
+' Apply payment with business rules
+$policy(Payment Application Policy, $fields = "Match payment to invoice\nValidate amounts match\nApply payment to invoice\nUpdate invoice balance\nCheck if fully paid\nTrigger receipt generation")
+$eventarrow(Payment Confirmed, Payment Application Policy)
+$command(Mark Invoice Paid)
+$commandarrow(Payment Application Policy, Mark Invoice Paid)
+$event(Invoice Paid, Invoice)
+$view(Paid Invoices)
+$wireframe(Finance Portal, Finance)
+
+$renderEventModelingDiagram()
+@enduml

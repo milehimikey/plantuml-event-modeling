@@ -1,0 +1,67 @@
+@startuml
+!include_once ../event-modeling-lib.iuml
+
+$enableAutoAlias()
+$enableAutoSpacing()
+
+' PHASE 2: ADD AUTOMATION POLICIES (Step 7a)
+' Purpose: Identify what should be automated
+' Audience: Development team + domain experts
+' What changed: Added policies to show automated workflows
+
+$configureWireframeLane(Customer)
+$configureWireframeLane(Finance)
+$configureEventLane(Subscription, $context = "Billing")
+$configureEventLane(Invoice, $context = "Billing")
+$configureEventLane(Payment, $context = "Billing")
+
+' Subscription workflow
+$wireframe(Subscription Portal, Customer)
+$command(Subscribe to Plan)
+$event(Subscription Activated, Subscription)
+$view(Active Subscriptions)
+$arrow(Active Subscriptions, Subscription Portal)
+
+' Invoice generation - NOW AUTOMATED
+$policy(Billing Cycle Policy, $offset = 1)
+$eventarrow(Subscription Activated, Billing Cycle Policy)
+$command(Generate Invoice)
+$commandarrow(Billing Cycle Policy, Generate Invoice)
+$event(Invoice Generated, Invoice)
+$view(Pending Invoices)
+
+' Invoice delivery - NOW AUTOMATED
+$policy(Invoice Delivery Policy)
+$eventarrow(Invoice Generated, Invoice Delivery Policy)
+$command(Send Invoice)
+$commandarrow(Invoice Delivery Policy, Send Invoice)
+$event(Invoice Sent, Invoice)
+$view(Sent Invoices)
+$wireframe(Customer Portal, Customer)
+$arrow(Sent Invoices, Customer Portal)
+
+' Payment workflow
+$wireframe(Customer Portal, Customer)
+$command(Submit Payment)
+$event(Payment Submitted, Payment)
+$view(Pending Payments)
+
+' Payment verification - NOW AUTOMATED
+$policy(Payment Verification Policy, $offset = 1)
+$eventarrow(Payment Submitted, Payment Verification Policy)
+$command(Verify Payment)
+$commandarrow(Payment Verification Policy, Verify Payment)
+$event(Payment Confirmed, Payment)
+$view(Confirmed Payments)
+
+' Apply payment - NOW AUTOMATED
+$policy(Payment Application Policy)
+$eventarrow(Payment Confirmed, Payment Application Policy)
+$command(Mark Invoice Paid)
+$commandarrow(Payment Application Policy, Mark Invoice Paid)
+$event(Invoice Paid, Invoice)
+$view(Paid Invoices)
+$wireframe(Finance Portal, Finance)
+
+$renderEventModelingDiagram()
+@enduml

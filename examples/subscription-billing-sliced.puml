@@ -1,0 +1,67 @@
+@startuml
+!include_once ../event-modeling-lib.iuml
+
+$enableAutoAlias()
+$enableAutoSpacing()
+
+' PHASE 4: COMPLETE SLICED MODEL WITH DATA STRUCTURES (Step 7c)
+' Purpose: Implementation specification with exact data structures
+' Audience: Development team
+' What changed: Added fields to commands, events, and views
+
+$configureWireframeLane(Customer)
+$configureWireframeLane(Finance)
+$configureEventLane(Subscription, $context = "Billing")
+$configureEventLane(Invoice, $context = "Billing")
+$configureEventLane(Payment, $context = "Billing")
+
+' Subscription workflow with data fields
+$wireframe(Subscription Portal, Customer, $fields = "Plan selector dropdown\nBilling cycle radio buttons\nPayment method input\nSubscribe button")
+$command(Subscribe to Plan, $fields = "customerId: UUID\nplanId: UUID\nbillingCycle: monthly|annual\nstartDate: date\npaymentMethodId: UUID")
+$event(Subscription Activated, Subscription, $fields = "subscriptionId: UUID\ncustomerId: UUID\nplanId: UUID\nrecurringAmount: decimal\nbillingCycle: monthly|annual\nactivatedAt: timestamp\nnextBillingDate: date\nstatus: active")
+$view(Active Subscriptions, $fields = "subscriptionId\nplanName\ncustomerName\namount\nnextBillingDate\nstatus\ncreatedAt")
+$arrow(Active Subscriptions, Subscription Portal)
+
+' Invoice generation
+$policy(Billing Cycle Policy, $offset = 1, $fields = "Check billing cycle date arrived\nGather pending charges for customer\nCalculate proration if mid-cycle\nAggregate subscription fees\nValidate minimum charge amount")
+$eventarrow(Subscription Activated, Billing Cycle Policy)
+$command(Generate Invoice, $fields = "subscriptionId: UUID\nbillingPeriodStart: date\nbillingPeriodEnd: date\nlineItems: LineItem[]\ntotalAmount: decimal")
+$commandarrow(Billing Cycle Policy, Generate Invoice)
+$event(Invoice Generated, Invoice, $fields = "invoiceId: UUID\nsubscriptionId: UUID\ncustomerId: UUID\ninvoiceNumber: string\nlineItems: LineItem[]\nsubtotal: decimal\ntax: decimal\ntotalAmount: decimal\ndueDate: date\ngeneratedAt: timestamp")
+$view(Pending Invoices, $fields = "invoiceId\ninvoiceNumber\ncustomerName\namount\ndueDate\nstatus")
+
+' Invoice delivery
+$policy(Invoice Delivery Policy, $fields = "Format invoice as PDF\nDetermine delivery method\nSend via email service\nLog delivery attempt")
+$eventarrow(Invoice Generated, Invoice Delivery Policy)
+$command(Send Invoice, $fields = "invoiceId: UUID\ndeliveryMethod: email|portal\nrecipientEmail: string")
+$commandarrow(Invoice Delivery Policy, Send Invoice)
+$event(Invoice Sent, Invoice, $fields = "invoiceId: UUID\ndeliveryMethod: email|portal\nsentAt: timestamp\nrecipientEmail: string\ndeliveryStatus: sent")
+$view(Sent Invoices, $fields = "invoiceId\ninvoiceNumber\ncustomerName\nsentAt\ndeliveryMethod\npaymentStatus")
+$wireframe(Customer Portal, Customer, $fields = "Invoice list\nInvoice details\nDownload PDF button\nPay now button")
+$arrow(Sent Invoices, Customer Portal)
+
+' Payment workflow
+$wireframe(Customer Portal, Customer, $fields = "Invoice amount display\nPayment method selector\nPay button")
+$command(Submit Payment, $fields = "invoiceId: UUID\npaymentMethodId: UUID\namount: decimal\ncurrency: string")
+$event(Payment Submitted, Payment, $fields = "paymentId: UUID\ninvoiceId: UUID\ncustomerId: UUID\namount: decimal\npaymentMethodId: UUID\nsubmittedAt: timestamp\nstatus: pending")
+$view(Pending Payments, $fields = "paymentId\ninvoiceNumber\ncustomerName\namount\nsubmittedAt\nstatus")
+
+' Payment verification
+$policy(Payment Verification Policy, $offset = 1, $fields = "Call payment gateway API\nValidate payment method\nCheck funds availability\nProcess transaction\nHandle 3D Secure\nRecord gateway transaction ID")
+$eventarrow(Payment Submitted, Payment Verification Policy)
+$command(Verify Payment, $fields = "paymentId: UUID\ngatewayTransactionId: string\nverificationResult: success|failed")
+$commandarrow(Payment Verification Policy, Verify Payment)
+$event(Payment Confirmed, Payment, $fields = "paymentId: UUID\ninvoiceId: UUID\ngatewayTransactionId: string\nconfirmedAt: timestamp\namount: decimal\nstatus: confirmed")
+$view(Confirmed Payments, $fields = "paymentId\ninvoiceNumber\namount\nconfirmedAt\ngatewayTransactionId")
+
+' Apply payment
+$policy(Payment Application Policy, $fields = "Match payment to invoice\nValidate amounts match\nApply payment to invoice\nUpdate invoice balance\nCheck if fully paid")
+$eventarrow(Payment Confirmed, Payment Application Policy)
+$command(Mark Invoice Paid, $fields = "invoiceId: UUID\npaymentId: UUID\npaidAmount: decimal")
+$commandarrow(Payment Application Policy, Mark Invoice Paid)
+$event(Invoice Paid, Invoice, $fields = "invoiceId: UUID\npaymentId: UUID\npaidAmount: decimal\npaidAt: timestamp\nremainingBalance: decimal\nstatus: paid")
+$view(Paid Invoices, $fields = "invoiceId\ninvoiceNumber\ncustomerName\npaidAmount\npaidAt\npaymentMethod")
+$wireframe(Finance Portal, Finance, $fields = "Paid invoices dashboard\nRevenue metrics\nExport to accounting")
+
+$renderEventModelingDiagram()
+@enduml
